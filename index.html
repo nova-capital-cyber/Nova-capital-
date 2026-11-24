@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Capital — Espace Membres</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #090e1a;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    /* En-tête */
+    header {
+      background-color: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+    }
+
+    .brand span {
+      color: #eab308;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Boutons */
+    .btn {
+      background-color: #eab308;
+      color: #090e1a;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    .btn:hover:not(:disabled) {
+      background-color: #ca8a04;
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-ghost {
+      background-color: transparent;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+    }
+
+    .btn-ghost:hover:not(:disabled) {
+      background-color: #1e293b;
+      color: #fff;
+    }
+
+    .btn-ok {
+      background-color: #16a34a;
+      color: #fff;
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+
+    .btn-no {
+      background-color: #dc2626;
+      color: #fff;
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+
+    /* Bandeau info marché */
+    .market-strip {
+      background-color: #060a12;
+      border-bottom: 1px solid #1e293b;
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .market-strip b {
+      color: #f8fafc;
+    }
+
+    .pos { color: #22c55e; font-weight: 600; }
+
+    /* Conteneur principal */
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 46px 16px 34px;
+    }
+
+    .hero-tag {
+      color: #eab308;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .hero h1 {
+      font-size: 38px;
+      font-weight: 800;
+      margin-bottom: 14px;
+      line-height: 1.2;
+    }
+
+    .hero h1 span {
+      color: #eab308;
+    }
+
+    .hero p {
+      color: #94a3b8;
+      max-width: 580px;
+      margin: 0 auto 24px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 32px 0 16px;
+      padding-left: 12px;
+      border-left: 3px solid #eab308;
+    }
+
+    /* Grilles et Cartes */
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      gap: 20px;
+    }
+
+    .box {
+      background-color: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .box h3 {
+      font-size: 17px;
+      margin-bottom: 6px;
+      color: #f8fafc;
+    }
+
+    .sub {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 14px;
+    }
+
+    .plan-price {
+      font-size: 28px;
+      font-weight: 800;
+      color: #eab308;
+      margin: 8px 0;
+    }
+
+    .plan-meta {
+      font-size: 12px;
+      color: #cbd5e1;
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+
+    .plan-meta div {
+      margin: 3px 0;
+    }
+
+    .plan-meta span.gain { color: #22c55e; font-weight: 700; }
+    .plan-meta span.ref { color: #eab308; font-weight: 700; }
+
+    /* Espace Retrait + Compte à rebours */
+    .withdraw-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 10px;
+    }
+
+    .countdown-box {
+      background: #131d33;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px 14px;
+      min-width: 210px;
+    }
+
+    .countdown-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      letter-spacing: 0.6px;
+    }
+
+    .countdown-val {
+      font-size: 16px;
+      font-weight: 800;
+      color: #eab308;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .countdown-val.ready {
+      color: #22c55e;
+    }
+
+    /* Bloc Parrainage */
+    .ref-code-box {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: #090e1a;
+      border: 1px dashed #eab308;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+    }
+
+    .ref-code-text {
+      font-family: monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: #eab308;
+      flex: 1;
+      word-break: break-all;
+    }
+
+    /* Graphiques */
+    .chart-wrap {
+      position: relative;
+      height: 250px;
+      width: 100%;
+    }
+
+    .chart-wrap-sm {
+      position: relative;
+      height: 210px;
+      width: 100%;
+    }
+
+    .chart-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tf-group button {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .tf-group button.active {
+      background: #eab308;
+      color: #090e1a;
+      border-color: #eab308;
+      font-weight: 700;
+    }
+
+    /* Formulaires */
+    label {
+      display: block;
+      font-size: 13px;
+      color: #cbd5e1;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 11px 12px;
+      background-color: #090e1a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #eab308;
+    }
+
+    .airtel-box {
+      background-color: #1c1917;
+      border: 1px solid #78350f;
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      color: #fde68a;
+      font-size: 14px;
+    }
+
+    .airtel-box strong {
+      display: block;
+      font-size: 18px;
+      color: #fff;
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .alert-msg {
+      background-color: #1e293b;
+      border-left: 3px solid #eab308;
+      padding: 14px;
+      border-radius: 6px;
+      color: #cbd5e1;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+
+    /* Tableaux Admin */
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    th {
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .tag-wait { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+    .tag-ok { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+    .tag-no { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+    .kpi-num {
+      font-size: 24px;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px 20px;
+      color: #64748b;
+      font-size: 13px;
+      border-top: 1px solid #1e293b;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand" onclick="go('home')">NOVA <span>CAPITAL</span></div>
+    <div class="nav-links">
+      <button class="btn btn-ghost" onclick="go('home')">Accueil</button>
+      <button class="btn" id="headerBtn" onclick="goAccount()">Mon compte</button>
+    </div>
+  </header>
+
+  <div class="market-strip">
+    <div>INDICE NOVA-100 : <b>4,892.40</b> <span class="pos">+2.84%</span></div>
+    <div>CYCLE : <b>19 Jours</b></div>
+    <div>PARRAINAGE : <span class="pos">Points + Bonus ($)</span></div>
+    <div>MEMBRES ACTIFS : <b id="totalMembersCount">1,480</b> <span class="pos">Actif</span></div>
+  </div>
+
+  <main class="container">
+
+    <!-- PAGE D'ACCUEIL -->
+    <section id="home">
+      <div class="hero">
+        <div class="hero-tag">Une communauté • Une vision</div>
+        <h1>Bienvenue chez<br><span>NOVA CAPITAL</span></h1>
+        <p>Choisissez votre formule d'adhésion sur un cycle de 19 jours, suivez votre solde et gagnez des points ainsi que des bonus en invitant vos amis.</p>
+        <button class="btn" onclick="go('account')">Rejoindre maintenant</button>
+      </div>
+
+      <h2 class="section-title">Performances & Répartition</h2>
+      <div class="grid-2">
+        <div class="box">
+          <div class="chart-top">
+            <div>
+              <h3>Indice de Croissance Nova</h3>
+              <div class="sub" style="margin:0;">Évolution de la valeur communautaire</div>
+            </div>
+            <div class="tf-group">
+              <button class="active" onclick="changePeriod('7J', this)">7J</button>
+              <button onclick="changePeriod('1M', this)">1M</button>
+              <button onclick="changePeriod('1A', this)">1A</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chartMarket"></canvas>
+          </div>
+        </div>
+
+        <div class="box">
+          <h3>Répartition des Actifs</h3>
+          <div class="sub">Allocation stratégique du portefeuille</div>
+          <div class="chart-wrap">
+            <canvas id="chartAlloc"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Offres d'adhésion & Parrainage (Cycle 19 jours)</h2>
+      <div class="grid-4" id="offersGrid"></div>
+
+      <div class="alert-msg">
+        Exemple équitable sur 19 jours : avec <b>$10</b>, vous gagnez <b>+$9.60</b> après 19 jours (solde de <b>$19.60</b>), plus <b>+$4.30</b> et des points à chaque ami qui s'inscrit avec votre code. Les formules vont jusqu'à <b>$369</b>.
+      </div>
+    </section>
+
+    <!-- PAGE CONNEXION / INSCRIPTION -->
+    <section id="account" class="hidden">
+      <div class="grid-2">
+        <div class="box">
+          <h3>Créer un compte</h3>
+          <div class="sub">Inscrivez-vous pour accéder à votre espace membre et à votre lien de parrainage.</div>
+
+          <label for="regName">Nom complet</label>
+          <input type="text" id="regName" placeholder="Ex: Jean Kasongo">
+
+          <label for="regPhone">Numéro de téléphone</label>
+          <input type="tel" id="regPhone" placeholder="Ex: 0970000000">
+
+          <label for="regPass">Mot de passe (6 caractères minimum)</label>
+          <input type="password" id="regPass" placeholder="Votre mot de passe">
+
+          <label for="regRefCode">Code parrain (facultatif)</label>
+          <input type="text" id="regRefCode" placeholder="Ex: JK-0000">
+
+          <button class="btn" style="width:100%;" onclick="register()">Créer mon compte</button>
+        </div>
+
+        <div class="box">
+          <h3>Connexion</h3>
+          <div class="sub">Connectez-vous avec votre numéro de téléphone et votre mot de passe.</div>
+
+          <label for="logPhone">Numéro de téléphone</label>
+          <input type="tel" id="logPhone" placeholder="Votre numéro">
+
+          <label for="logPass">Mot de passe</label>
+          <input type="password" id="logPass" placeholder="Votre mot de passe">
+
+          <button class="btn" style="width:100%;" onclick="login()">Se connecter</button>
+          <p id="loginErr" style="color:#ef4444; font-size:13px; margin-top:10px; font-weight:600;"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ESPACE MEMBRE -->
+    <section id="member" class="hidden">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
+        <h2 class="section-title" style="margin:0;">Mon espace personnel</h2>
+        <button class="btn btn-ghost" onclick="logout()">Déconnexion</button>
+      </div>
+
+      <div class="grid-4">
+        <div class="box">
+          <div class="sub" style="margin:0;">Membre</div>
+          <div class="kpi-num" id="mName" style="font-size:19px;">-</div>
+        </div>
+        <div class="box">
+          <div class="sub" style="margin:0;">Mon Solde ($)</div>
+          <div class="kpi-num" id="mBalance" style="color:#22c55e;">$0.00</div>
+        </div>
+        <div class="box">
+          <div class="sub" style="margin:0;">Mes Points</div>
+          <div class="kpi-num" id="mPoints" style="color:#eab308;">0 pts</div>
+        </div>
+        <div class="box">
+          <div class="sub" style="margin:0;">Mon Offre</div>
+          <div class="kpi-num" id="mOffer" style="font-size:19px;">Aucune</div>
+        </div>
+      </div>
+
+      <!-- ESPACE RETRAIT AVEC COMPTE À REBOURS DE 19 JOURS -->
+      <div class="box">
+        <h3>Espace Retrait</h3>
+        <div class="sub">Le retrait est débloqué 19 jours après la validation de votre dépôt.</div>
+        <div class="withdraw-row">
+          <div>
+            <div style="font-size:14px; color:#f8fafc; font-weight:600;" id="withdrawStatusText">Aucun dépôt actif pour le moment.</div>
+            <div class="sub" style="margin:2px 0 0;" id="withdrawHintText">Activez une formule pour démarrer le cycle de 19 jours.</div>
+          </div>
+
+          <div class="countdown-box">
+            <div class="countdown-label">Compte à rebours (19 jours)</div>
+            <div class="countdown-val" id="countdownDisplay">19j 00h 00m 00s</div>
+          </div>
+
+          <button class="btn" id="withdrawBtn" disabled onclick="requestWithdraw()">Demander le retrait</button>
+        </div>
+      </div>
+
+      <!-- PROGRAMME DE PARRAINAGE & OFFRES PARRAINAGE -->
+      <div class="box">
+        <h3>Programme de Parrainage & Offres Bonus</h3>
+        <div class="sub">Partagez votre code : chaque ami inscrit vous rapporte un bonus en dollars et des points.</div>
+
+        <label>Votre code de parrainage personnel</label>
+        <div class="ref-code-box">
+          <span class="ref-code-text" id="myRefCode">-</span>
+          <button class="btn" style="padding:7px 14px; font-size:12px;" onclick="copyMyRefCode()">Copier</button>
+        </div>
+
+        <div class="sub" style="margin-bottom:10px;">
+          Filleuls inscrits avec votre code : <b id="myReferralsCount" style="color:#fff;">0</b>
+        </div>
+
+        <div class="grid-3" id="referralOffersGrid"></div>
+      </div>
+
+      <div class="box">
+        <h3>Évolution de mon solde & de mes points</h3>
+        <div class="sub">Suivi visuel de votre progression</div>
+        <div class="chart-wrap-sm">
+          <canvas id="chartMember"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="box">
+          <h3>Choisir ou renouveler une formule</h3>
+          <div class="sub">Envoyez uniquement la capture d'écran de votre paiement Airtel Money.</div>
+
+          <label for="planSelect">Formule (jusqu'à $369)</label>
+          <select id="planSelect"></select>
+
+          <div class="airtel-box">
+            Paiement Airtel Money au numéro officiel :
+            <strong>097 235 2578</strong>
+          </div>
+
+          <label for="proofFile">Capture d'écran du paiement (Max 2 Mo)</label>
+          <input type="file" id="proofFile" accept="image/*">
+
+          <button class="btn" id="sendPayBtn" style="width:100%;" onclick="sendPayment()">Envoyer la capture</button>
+        </div>
+
+        <div class="box">
+          <h3>Historique de mes envois</h3>
+          <div class="sub">Suivi de vos dépôts et retraits</div>
+          <div id="myPaymentsList">
+            <p class="sub">Aucun paiement envoyé pour l'instant.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ESPACE ADMINISTRATION (NUMÉRO 097 235 2578 + MOT DE PASSE FORT eco369st@) -->
+    <section id="admin" class="hidden">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
+        <h2 class="section-title" style="margin:0;">Administration — Nova Capital</h2>
+        <button class="btn btn-ghost" onclick="logout()">Quitter l'administration</button>
+      </div>
+
+      <div class="grid-3">
+        <div class="box">
+          <div class="sub" style="margin:0;">Total Inscrits</div>
+          <div class="kpi-num" id="admTotalUsers" style="color:#eab308;">0</div>
+        </div>
+        <div class="box">
+          <div class="sub" style="margin:0;">Paiements en attente</div>
+          <div class="kpi-num" id="admPendingPay">0</div>
+        </div>
+        <div class="box">
+          <div class="sub" style="margin:0;">Dépôts Validés ($)</div>
+          <div class="kpi-num" id="admTotalRev" style="color:#22c55e;">$0.00</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="box">
+          <h3>Dépôts validés par formule ($)</h3>
+          <div class="chart-wrap-sm">
+            <canvas id="chartAdminRev"></canvas>
+          </div>
+        </div>
+        <div class="box">
+          <h3>État des paiements</h3>
+          <div class="chart-wrap-sm">
+            <canvas id="chartAdminStatus"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTE COMPLÈTE DES PERSONNES INSCRITES -->
+      <div class="box">
+        <h3>Liste des membres inscrits</h3>
+        <div class="sub">Toutes les personnes inscrites sur Nova Capital</div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nom complet</th>
+                <th>Téléphone</th>
+                <th>Code</th>
+                <th>Offre</th>
+                <th>Solde ($)</th>
+                <th>Points</th>
+                <th>Inscription</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- VALIDATION DES CAPTURES DE PAIEMENT -->
+        <div class="box">
+          <h3>Captures de paiement reçues</h3>
+          <div class="sub">Valider active la formule, démarre le cycle de 19 jours et crédite le membre</div>
+          <div id="adminPaymentsList"></div>
+        </div>
+
+        <!-- AJUSTEMENT MANUEL SOLDE & POINTS -->
+        <div class="box">
+          <h3>Ajuster le solde ou les points d'un membre</h3>
+          <div class="sub">Sélectionnez un membre pour mettre à jour ses données</div>
+
+          <label for="adminUserSelect">Membre</label>
+          <select id="adminUserSelect"></select>
+
+          <label for="adminNewBalance">Nouveau solde ($)</label>
+          <input type="number" step="0.01" id="adminNewBalance" placeholder="Ex: 19.60">
+
+          <label for="adminNewPoints">Nouveaux points</label>
+          <input type="number" id="adminNewPoints" placeholder="Ex: 100">
+
+          <button class="btn" style="width:100%;" onclick="changeUserStats()">Enregistrer les modifications</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    NOVA CAPITAL © 2026 — Tous droits réservés
+  </footer>
+
+  <script>
+    // =========================================================================
+    // CONFIGURATION SUPABASE — REMPLACEZ PAR VOS CLÉS DU TABLEAU DE BORD SUPABASE
+    // =========================================================================
+    const SUPABASE_URL = "https://voipkzpadmarxzstszjo.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_D7myO-e-o4qxwumtmKdrAQ_DiEyEOyc";
+    const PROOF_BUCKET = "payment-proofs"; // Bucket Storage public dans Supabase
+
+    const ADMIN_PHONE = "0972352578";
+    const ADMIN_PASS = "eco369st@";
+    const CYCLE_DAYS = 19;
+    const CYCLE_MS = CYCLE_DAYS * 24 * 60 * 60 * 1000;
+
+    const OFFERS = [
+      { name: "Découverte", price: 10,  cycleGain: 9.60,   refBonus: 4.30,   refPoints: 20 },
+      { name: "Bronze",     price: 25,  cycleGain: 24.00,  refBonus: 10.75,  refPoints: 50 },
+      { name: "Silver",     price: 50,  cycleGain: 48.00,  refBonus: 21.50,  refPoints: 100 },
+      { name: "Gold",       price: 100, cycleGain: 96.00,  refBonus: 43.00,  refPoints: 200 },
+      { name: "Platinum",   price: 200, cycleGain: 192.00, refBonus: 86.00,  refPoints: 400 },
+      { name: "Prestige",   price: 369, cycleGain: 354.24, refBonus: 158.67, refPoints: 750 }
+    ];
+
+    const REFERRAL_PACKS = [
+      { title: "Pack Ambassadeur I",   target: "1 à 2 amis",  dollarReward: "+$4.30 / ami",   pointReward: "+25 pts / ami",   desc: "Crédité dès l'inscription d'un ami avec votre code." },
+      { title: "Pack Ambassadeur II",  target: "3 à 5 amis",  dollarReward: "+$10.75 / ami",  pointReward: "+60 pts / ami",   desc: "Bonus proportionnel équitable lié aux formules supérieures." },
+      { title: "Pack Prestige Réseau", target: "6+ amis",     dollarReward: "Jusqu'à +$158.67", pointReward: "Jusqu'à +750 pts", desc: "Récompenses maximales alignées sur l'offre Prestige ($369)." }
+    ];
+
+    const hasSupabaseConfig =
+      SUPABASE_URL.startsWith("https://") &&
+      !SUPABASE_URL.includes("VOTRE_PROJECT_REF") &&
+      SUPABASE_ANON_KEY !== "VOTRE_SUPABASE_ANON_KEY";
+
+    const sbClient = hasSupabaseConfig
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    function cleanPhone(num) {
+      let cleaned = (num || "").replace(/[\s\-\.\(\)]/g, "");
+      if (cleaned.startsWith("+243")) cleaned = "0" + cleaned.slice(4);
+      if (cleaned.startsWith("243") && cleaned.length === 12) cleaned = "0" + cleaned.slice(3);
+      return cleaned;
+    }
+
+    function fmtMoney(val) {
+      return "$" + Number(val || 0).toFixed(2);
+    }
+
+    function generateRefCode(name, phone) {
+      const prefix = (name || "NV").replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase() || "NV";
+      const suffix = cleanPhone(phone).slice(-4) || Math.floor(1000 + Math.random() * 9000);
+      return `${prefix}-${suffix}`;
+    }
+
+    // Mapping base <-> front
+    function mapUserFromDB(row) {
+      return {
+        id: row.id,
+        name: row.name,
+        phone: row.phone,
+        cleanPhone: row.clean_phone || cleanPhone(row.phone),
+        password: row.password,
+        refCode: row.ref_code,
+        referredBy: row.referred_by,
+        referralsCount: Number(row.referrals_count || 0),
+        balance: Number(row.balance || 0),
+        points: Number(row.points || 0),
+        offer: row.offer || "Aucune",
+        depositStartAt: row.deposit_start_at ? Number(row.deposit_start_at) : null,
+        joinedAt: row.joined_at || new Date().toLocaleDateString("fr-FR")
+      };
+    }
+
+    function mapUserToDB(u) {
+      return {
+        name: u.name,
+        phone: u.phone,
+        clean_phone: u.cleanPhone,
+        password: u.password,
+        ref_code: u.refCode,
+        referred_by: u.referredBy,
+        referrals_count: u.referralsCount || 0,
+        balance: Number(u.balance || 0),
+        points: Number(u.points || 0),
+        offer: u.offer || "Aucune",
+        deposit_start_at: u.depositStartAt || null,
+        joined_at: u.joinedAt || new Date().toLocaleDateString("fr-FR")
+      };
+    }
+
+    function mapPaymentFromDB(row) {
+      return {
+        id: row.id,
+        type: row.type || "Dépôt",
+        name: row.name,
+        phone: row.phone,
+        cleanPhone: row.clean_phone || cleanPhone(row.phone),
+        offer: row.offer,
+        amount: Number(row.amount || 0),
+        cycleGain: Number(row.cycle_gain || 0),
+        image: row.image_url || null,
+        status: row.status || "En attente",
+        date: row.date || new Date().toLocaleDateString("fr-FR")
+      };
+    }
+
+    let users = [];
+    let payments = [];
+    let sessionUser = null;
+    let isAdminSession = false;
+
+    let cMarket, cAlloc, cMember, cAdmRev, cAdmStat;
+
+    function updateMemberCounterUI() {
+      document.getElementById("totalMembersCount").textContent = (1480 + users.length).toLocaleString("fr-FR");
+    }
+
+    // Chargement des données depuis Supabase (avec fallback localStorage si non configuré)
+    async function refreshData() {
+      if (!sbClient) {
+        users = JSON.parse(localStorage.getItem("nova_sb_fallback_users") || "[]");
+        payments = JSON.parse(localStorage.getItem("nova_sb_fallback_payments") || "[]");
+        updateMemberCounterUI();
+        return;
+      }
+
+      const [uRes, pRes] = await Promise.all([
+        sbClient.from("nova_users").select("*").order("id", { ascending: true }),
+        sbClient.from("nova_payments").select("*").order("id", { ascending: false })
+      ]);
+
+      if (uRes.error) console.error("Erreur chargement utilisateurs Supabase:", uRes.error);
+      if (pRes.error) console.error("Erreur chargement paiements Supabase:", pRes.error);
+
+      users = (uRes.data || []).map(mapUserFromDB);
+      payments = (pRes.data || []).map(mapPaymentFromDB);
+      updateMemberCounterUI();
+    }
+
+    function saveFallbackLocal() {
+      localStorage.setItem("nova_sb_fallback_users", JSON.stringify(users));
+      localStorage.setItem("nova_sb_fallback_payments", JSON.stringify(payments));
+      updateMemberCounterUI();
+    }
+
+    function go(sectionId) {
+      ["home", "account", "member", "admin"].forEach(id => {
+        document.getElementById(id).classList.add("hidden");
+      });
+      document.getElementById(sectionId).classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function goAccount() {
+      await refreshData();
+      if (isAdminSession) {
+        openAdminSpace();
+      } else if (sessionUser) {
+        openMemberSpace();
+      } else {
+        go("account");
+      }
+    }
+
+    function buildOffersUI() {
+      document.getElementById("offersGrid").innerHTML = OFFERS.map(o => {
+        const totalAfter19d = o.price + o.cycleGain;
+        return `
+          <div class="box" style="text-align:center;">
+            <h3>${o.name}</h3>
+            <div class="plan-price">$${o.price}</div>
+            <div class="plan-meta">
+              <div>• Gain 19j : <span class="gain">+$${o.cycleGain.toFixed(2)}</span> (Solde $${totalAfter19d.toFixed(2)})</div>
+              <div>• Parrainage : <span class="ref">+$${o.refBonus.toFixed(2)}</span> & <b>+${o.refPoints} pts</b></div>
+            </div>
+            <button class="btn" style="width:100%;" onclick="pickPlan('${o.name}')">Choisir</button>
+          </div>
+        `;
+      }).join("");
+
+      document.getElementById("planSelect").innerHTML = OFFERS.map(o =>
+        `<option value="${o.name}">${o.name} — $${o.price} (+$${o.cycleGain.toFixed(2)} en 19j)</option>`
+      ).join("");
+
+      document.getElementById("referralOffersGrid").innerHTML = REFERRAL_PACKS.map(rp => `
+        <div class="box" style="background:#090e1a; margin-bottom:0;">
+          <h3>${rp.title}</h3>
+          <div class="sub" style="margin-bottom:8px;">Palier : <b>${rp.target}</b></div>
+          <div style="font-size:14px; color:#22c55e; font-weight:700;">${rp.dollarReward}</div>
+          <div style="font-size:14px; color:#eab308; font-weight:700; margin-bottom:8px;">${rp.pointReward}</div>
+          <div class="sub" style="margin:0;">${rp.desc}</div>
+        </div>
+      `).join("");
+    }
+
+    function pickPlan(offerName) {
+      document.getElementById("planSelect").value = offerName;
+      if (sessionUser && !isAdminSession) {
+        openMemberSpace();
+      } else {
+        go("account");
+      }
+    }
+
+    // Inscription dans Supabase + récompense parrainage
+    async function register() {
+      await refreshData();
+
+      const name = document.getElementById("regName").value.trim();
+      const rawPhone = document.getElementById("regPhone").value.trim();
+      const phone = cleanPhone(rawPhone);
+      const pass = document.getElementById("regPass").value;
+      const enteredRef = document.getElementById("regRefCode").value.trim().toUpperCase();
+
+      if (!name || phone.length < 9 || pass.length < 6) {
+        return alert("Veuillez renseigner votre nom, un numéro valide et un mot de passe de 6 caractères minimum.");
+      }
+
+      if (phone === ADMIN_PHONE) {
+        return alert("Ce numéro est réservé à l'administration.");
+      }
+
+      if (users.some(u => cleanPhone(u.phone) === phone)) {
+        return alert("Ce numéro de téléphone est déjà inscrit.");
+      }
+
+      let referrer = null;
+      if (enteredRef) {
+        referrer = users.find(u => u.refCode === enteredRef);
+        if (!referrer) {
+          return alert("Code parrain introuvable. Vérifiez le code ou laissez le champ vide.");
+        }
+      }
+
+      const newUser = {
+        name: name,
+        phone: rawPhone,
+        cleanPhone: phone,
+        password: pass,
+        refCode: generateRefCode(name, phone),
+        referredBy: referrer ? referrer.refCode : null,
+        referralsCount: 0,
+        balance: 0,
+        points: 10,
+        offer: "Aucune",
+        depositStartAt: null,
+        joinedAt: new Date().toLocaleDateString("fr-FR")
+      };
+
+      if (referrer) {
+        const refOffer = OFFERS.find(o => o.name === referrer.offer) || OFFERS[0];
+        referrer.referralsCount = (referrer.referralsCount || 0) + 1;
+        referrer.balance = Number(((referrer.balance || 0) + refOffer.refBonus).toFixed(2));
+        referrer.points = (referrer.points || 0) + refOffer.refPoints;
+      }
+
+      if (!sbClient) {
+        users.push(newUser);
+        saveFallbackLocal();
+        sessionUser = newUser;
+        isAdminSession = false;
+        openMemberSpace();
+        return;
+      }
+
+      const { data: insertedUser, error: insErr } = await sbClient
+        .from("nova_users")
+        .insert(mapUserToDB(newUser))
+        .select()
+        .single();
+
+      if (insErr) {
+        alert("Erreur lors de l'inscription sur Supabase : " + insErr.message);
+        return;
+      }
+
+      if (referrer && referrer.id) {
+        const { error: refErr } = await sbClient
+          .from("nova_users")
+          .update({
+            referrals_count: referrer.referralsCount,
+            balance: referrer.balance,
+            points: referrer.points
+          })
+          .eq("id", referrer.id);
+        if (refErr) console.error("Erreur mise à jour parrain:", refErr);
+      }
+
+      await refreshData();
+      sessionUser = mapUserFromDB(insertedUser);
+      isAdminSession = false;
+      openMemberSpace();
+    }
+
+    // Connexion : numéro 097 235 2578 + mot de passe eco369st@
+    async function login() {
+      await refreshData();
+
+      const rawPhone = document.getElementById("logPhone").value.trim();
+      const phone = cleanPhone(rawPhone);
+      const pass = document.getElementById("logPass").value;
+      const errEl = document.getElementById("loginErr");
+
+      if (phone === ADMIN_PHONE) {
+        if (pass !== ADMIN_PASS) {
+          errEl.textContent = "Accès refusé : mot de passe administrateur incorrect.";
+          return;
+        }
+        errEl.textContent = "";
+        isAdminSession = true;
+        sessionUser = null;
+        openAdminSpace();
+        return;
+      }
+
+      const found = users.find(u => cleanPhone(u.phone) === phone && u.password === pass);
+      if (!found) {
+        errEl.textContent = "Numéro de téléphone ou mot de passe incorrect.";
+        return;
+      }
+
+      errEl.textContent = "";
+      sessionUser = found;
+      isAdminSession = false;
+      openMemberSpace();
+    }
+
+    function openMemberSpace() {
+      sessionUser = users.find(u => u.cleanPhone === sessionUser.cleanPhone) || sessionUser;
+      document.getElementById("mName").textContent = sessionUser.name;
+      document.getElementById("mBalance").textContent = fmtMoney(sessionUser.balance);
+      document.getElementById("mPoints").textContent = (sessionUser.points || 0) + " pts";
+      document.getElementById("mOffer").textContent = sessionUser.offer;
+      document.getElementById("myRefCode").textContent = sessionUser.refCode;
+      document.getElementById("myReferralsCount").textContent = sessionUser.referralsCount || 0;
+      document.getElementById("headerBtn").textContent = "Mon espace";
+
+      updateCountdownUI();
+      renderUserPayments();
+      drawMemberChart();
+      go("member");
+    }
+
+    function openAdminSpace() {
+      document.getElementById("headerBtn").textContent = "Espace Admin";
+      renderAdminData();
+      go("admin");
+    }
+
+    function logout() {
+      sessionUser = null;
+      isAdminSession = false;
+      document.getElementById("headerBtn").textContent = "Mon compte";
+      document.getElementById("logPass").value = "";
+      go("home");
+    }
+
+    function copyMyRefCode() {
+      if (!sessionUser) return;
+      navigator.clipboard.writeText(sessionUser.refCode).then(() => {
+        alert("Code parrain copié : " + sessionUser.refCode);
+      }).catch(() => {
+        alert("Votre code parrain : " + sessionUser.refCode);
+      });
+    }
+
+    // Compte à rebours de 19 jours
+    function updateCountdownUI() {
+      const btn = document.getElementById("withdrawBtn");
+      const display = document.getElementById("countdownDisplay");
+      const statusText = document.getElementById("withdrawStatusText");
+      const hintText = document.getElementById("withdrawHintText");
+
+      if (!sessionUser || !sessionUser.depositStartAt) {
+        btn.disabled = true;
+        display.classList.remove("ready");
+        display.textContent = "19j 00h 00m 00s";
+        statusText.textContent = "Retrait verrouillé (aucun dépôt validé)";
+        hintText.textContent = "Le bouton reste visible mais désactivé tant que les 19 jours ne sont pas écoulés.";
+        return;
+      }
+
+      const unlockTime = Number(sessionUser.depositStartAt) + CYCLE_MS;
+      const diff = unlockTime - Date.now();
+
+      if (diff <= 0) {
+        display.classList.add("ready");
+        display.textContent = "00j 00h 00m 00s";
+        statusText.textContent = "Période de 19 jours terminée — Retrait disponible";
+        hintText.textContent = "Solde disponible : " + fmtMoney(sessionUser.balance);
+        btn.disabled = (sessionUser.balance || 0) <= 0;
+      } else {
+        display.classList.remove("ready");
+        const totalSec = Math.floor(diff / 1000);
+        const days = Math.floor(totalSec / 86400);
+        const hours = Math.floor((totalSec % 86400) / 3600);
+        const mins = Math.floor((totalSec % 3600) / 60);
+        const secs = totalSec % 60;
+
+        display.textContent =
+          `${String(days).padStart(2, "0")}j ` +
+          `${String(hours).padStart(2, "0")}h ` +
+          `${String(mins).padStart(2, "0")}m ` +
+          `${String(secs).padStart(2, "0")}s`;
+
+        statusText.textContent = "Retrait verrouillé — Cycle de 19 jours en cours";
+        hintText.textContent = "Déblocage prévu le : " + new Date(unlockTime).toLocaleString("fr-FR");
+        btn.disabled = true;
+      }
+    }
+
+    async function requestWithdraw() {
+      if (!sessionUser || !sessionUser.depositStartAt) return;
+      if (Date.now() < Number(sessionUser.depositStartAt) + CYCLE_MS) {
+        return alert("Le retrait n'est pas encore disponible avant les 19 jours.");
+      }
+      if ((sessionUser.balance || 0) <= 0) {
+        return alert("Votre solde est nul.");
+      }
+
+      const amount = Number(sessionUser.balance);
+
+      if (!sbClient) {
+        sessionUser.balance = 0;
+        sessionUser.depositStartAt = null;
+        sessionUser.offer = "Aucune";
+        payments.unshift({
+          id: Date.now(),
+          type: "Retrait",
+          name: sessionUser.name,
+          phone: sessionUser.phone,
+          cleanPhone: sessionUser.cleanPhone,
+          offer: "Retrait Solde",
+          amount: amount,
+          image: null,
+          status: "En attente",
+          date: new Date().toLocaleDateString("fr-FR")
+        });
+        saveFallbackLocal();
+        openMemberSpace();
+        alert(`Demande de retrait de ${fmtMoney(amount)} enregistrée.`);
+        return;
+      }
+
+      const { error: uErr } = await sbClient
+        .from("nova_users")
+        .update({ balance: 0, deposit_start_at: null, offer: "Aucune" })
+        .eq("clean_phone", sessionUser.cleanPhone);
+
+      if (uErr) return alert("Erreur retrait Supabase : " + uErr.message);
+
+      const { error: pErr } = await sbClient
+        .from("nova_payments")
+        .insert({
+          type: "Retrait",
+          name: sessionUser.name,
+          phone: sessionUser.phone,
+          clean_phone: sessionUser.cleanPhone,
+          offer: "Retrait Solde",
+          amount: amount,
+          cycle_gain: 0,
+          image_url: null,
+          status: "En attente",
+          date: new Date().toLocaleDateString("fr-FR")
+        });
+
+      if (pErr) return alert("Erreur enregistrement retrait : " + pErr.message);
+
+      await refreshData();
+      openMemberSpace();
+      alert(`Demande de retrait de ${fmtMoney(amount)} enregistrée.`);
+    }
+
+    // Upload de la capture vers Supabase Storage + insertion dans nova_payments
+    async function sendPayment() {
+      const fileInput = document.getElementById("proofFile");
+      const sendBtn = document.getElementById("sendPayBtn");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        return alert("Veuillez sélectionner la capture d'écran de votre paiement Airtel Money.");
+      }
+
+      if (file.size > 2 * 1024 * 1024) {
+        return alert("L'image est trop lourde (maximum 2 Mo).");
+      }
+
+      const chosenPlan = OFFERS.find(o => o.name === document.getElementById("planSelect").value);
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Envoi en cours...";
+
+      try {
+        let imageUrl = null;
+
+        if (!sbClient) {
+          imageUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+
+          payments.unshift({
+            id: Date.now(),
+            type: "Dépôt",
+            name: sessionUser.name,
+            phone: sessionUser.phone,
+            cleanPhone: sessionUser.cleanPhone,
+            offer: chosenPlan.name,
+            amount: chosenPlan.price,
+            cycleGain: chosenPlan.cycleGain,
+            image: imageUrl,
+            status: "En attente",
+            date: new Date().toLocaleDateString("fr-FR")
+          });
+          saveFallbackLocal();
+        } else {
+          const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+          const filePath = `${sessionUser.cleanPhone}/${Date.now()}.${ext}`;
+
+          const { error: upErr } = await sbClient.storage
+            .from(PROOF_BUCKET)
+            .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+          if (upErr) {
+            throw new Error("Upload Storage échoué (vérifiez le bucket '" + PROOF_BUCKET + "') : " + upErr.message);
+          }
+
+          const { data: pubData } = sbClient.storage
+            .from(PROOF_BUCKET)
+            .getPublicUrl(filePath);
+
+          imageUrl = pubData.publicUrl;
+
+          const { error: dbErr } = await sbClient
+            .from("nova_payments")
+            .insert({
+              type: "Dépôt",
+              name: sessionUser.name,
+              phone: sessionUser.phone,
+              clean_phone: sessionUser.cleanPhone,
+              offer: chosenPlan.name,
+              amount: chosenPlan.price,
+              cycle_gain: chosenPlan.cycleGain,
+              image_url: imageUrl,
+              status: "En attente",
+              date: new Date().toLocaleDateString("fr-FR")
+            });
+
+          if (dbErr) throw new Error("Insertion paiement Supabase échouée : " + dbErr.message);
+          await refreshData();
+        }
+
+        fileInput.value = "";
+        renderUserPayments();
+        alert("Capture d'écran envoyée. Une fois validée, votre solde et le compte à rebours de 19 jours seront activés.");
+      } catch (err) {
+        alert(err.message || "Erreur lors de l'envoi.");
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Envoyer la capture";
+      }
+    }
+
+    function renderUserPayments() {
+      const list = payments.filter(p => p.cleanPhone === sessionUser.cleanPhone);
+      const box = document.getElementById("myPaymentsList");
+
+      if (list.length === 0) {
+        box.innerHTML = `<p class="sub">Aucun paiement envoyé pour l'instant.</p>`;
+        return;
+      }
+
+      box.innerHTML = list.map(p => {
+        let cls = "tag-wait";
+        if (p.status === "Validé") cls = "tag-ok";
+        if (p.status === "Refusé") cls = "tag-no";
+
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #1e293b;">
+            <div>
+              <strong>${p.type || "Dépôt"} — ${p.offer} (${fmtMoney(p.amount)})</strong>
+              <div class="sub" style="margin:0;">Date : ${p.date}</div>
+            </div>
+            <span class="tag ${cls}">${p.status}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Rendu espace Administrateur
+    function renderAdminData() {
+      document.getElementById("admTotalUsers").textContent = users.length;
+      const pending = payments.filter(p => p.status === "En attente").length;
+      document.getElementById("admPendingPay").textContent = pending;
+      const totalRev = payments
+        .filter(p => (p.type || "Dépôt") === "Dépôt" && p.status === "Validé")
+        .reduce((acc, item) => acc + item.amount, 0);
+      document.getElementById("admTotalRev").textContent = fmtMoney(totalRev);
+
+      const tbody = document.getElementById("adminUsersTable");
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color:#94a3b8; text-align:center;">Aucun membre inscrit pour le moment.</td></tr>`;
+      } else {
+        tbody.innerHTML = users.map((u, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td><b>${u.name}</b></td>
+            <td>${u.phone}</td>
+            <td><code>${u.refCode || "-"}</code></td>
+            <td><span class="tag ${u.offer !== "Aucune" ? "tag-ok" : "tag-wait"}">${u.offer}</span></td>
+            <td><b style="color:#22c55e;">${fmtMoney(u.balance)}</b></td>
+            <td><b style="color:#eab308;">${u.points || 0} pts</b></td>
+            <td>${u.joinedAt || "-"}</td>
+          </tr>
+        `).join("");
+      }
+
+      const userSelect = document.getElementById("adminUserSelect");
+      if (users.length === 0) {
+        userSelect.innerHTML = `<option value="">Aucun membre</option>`;
+      } else {
+        userSelect.innerHTML = users.map((u, idx) =>
+          `<option value="${idx}">${u.name} (${u.phone}) — Solde: ${fmtMoney(u.balance)} | ${u.points || 0} pts</option>`
+        ).join("");
+      }
+
+      const payContainer = document.getElementById("adminPaymentsList");
+      if (payments.length === 0) {
+        payContainer.innerHTML = `<p class="sub">Aucune demande reçue.</p>`;
+      } else {
+        payContainer.innerHTML = payments.map((p, idx) => `
+          <div style="background:#090e1a; border:1px solid #1e293b; border-radius:8px; padding:14px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <strong>${p.name} (${p.phone})</strong>
+              <span style="color:#eab308; font-weight:700;">${p.type || "Dépôt"} ${p.offer} — ${fmtMoney(p.amount)}</span>
+            </div>
+            <div class="sub" style="margin-bottom:8px;">Date : ${p.date} • Statut : <b>${p.status}</b></div>
+            ${p.image ? `
+              <a href="${p.image}" target="_blank" title="Cliquer pour agrandir">
+                <img src="${p.image}" alt="Capture paiement" style="max-width:140px; border-radius:6px; border:1px solid #334155; display:block; margin-bottom:10px;">
+              </a>
+            ` : ""}
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-ok" onclick="approvePay(${idx})">Valider</button>
+              <button class="btn btn-no" onclick="declinePay(${idx})">Refuser</button>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      drawAdminCharts();
+    }
+
+    async function approvePay(index) {
+      const p = payments[index];
+      const member = users.find(u => u.cleanPhone === p.cleanPhone);
+
+      let updatedMember = null;
+      if (member && (p.type || "Dépôt") === "Dépôt") {
+        const offerObj = OFFERS.find(o => o.name === p.offer) || { price: p.amount, cycleGain: p.cycleGain || (p.amount * 0.96), refPoints: 20 };
+        const creditedTotal = Number((offerObj.price + offerObj.cycleGain).toFixed(2));
+        updatedMember = {
+          offer: offerObj.name,
+          balance: Number(((member.balance || 0) + creditedTotal).toFixed(2)),
+          points: (member.points || 0) + offerObj.refPoints,
+          depositStartAt: Date.now()
+        };
+      }
+
+      if (!sbClient) {
+        p.status = "Validé";
+        if (member && updatedMember) Object.assign(member, updatedMember);
+        saveFallbackLocal();
+        renderAdminData();
+        return;
+      }
+
+      const { error: pErr } = await sbClient
+        .from("nova_payments")
+        .update({ status: "Validé" })
+        .eq("id", p.id);
+      if (pErr) return alert("Erreur validation paiement : " + pErr.message);
+
+      if (member && updatedMember) {
+        const { error: uErr } = await sbClient
+          .from("nova_users")
+          .update({
+            offer: updatedMember.offer,
+            balance: updatedMember.balance,
+            points: updatedMember.points,
+            deposit_start_at: updatedMember.depositStartAt
+          })
+          .eq("id", member.id);
+        if (uErr) return alert("Erreur mise à jour membre : " + uErr.message);
+      }
+
+      await refreshData();
+      renderAdminData();
+    }
+
+    async function declinePay(index) {
+      const p = payments[index];
+
+      if (!sbClient) {
+        p.status = "Refusé";
+        saveFallbackLocal();
+        renderAdminData();
+        return;
+      }
+
+      const { error } = await sbClient
+        .from("nova_payments")
+        .update({ status: "Refusé" })
+        .eq("id", p.id);
+      if (error) return alert("Erreur refus paiement : " + error.message);
+
+      await refreshData();
+      renderAdminData();
+    }
+
+    async function changeUserStats() {
+      if (users.length === 0) return;
+      const idx = Number(document.getElementById("adminUserSelect").value);
+      const u = users[idx];
+      const balVal = Number(document.getElementById("adminNewBalance").value);
+      const ptsVal = Number(document.getElementById("adminNewPoints").value);
+
+      if (isNaN(balVal) || balVal < 0 || !Number.isInteger(ptsVal) || ptsVal < 0) {
+        return alert("Veuillez saisir un solde positif et un nombre entier de points valide.");
+      }
+
+      const newBal = Number(balVal.toFixed(2));
+
+      if (!sbClient) {
+        u.balance = newBal;
+        u.points = ptsVal;
+        saveFallbackLocal();
+        document.getElementById("adminNewBalance").value = "";
+        document.getElementById("adminNewPoints").value = "";
+        renderAdminData();
+        alert("Solde et points mis à jour pour " + u.name + ".");
+        return;
+      }
+
+      const { error } = await sbClient
+        .from("nova_users")
+        .update({ balance: newBal, points: ptsVal })
+        .eq("id", u.id);
+
+      if (error) return alert("Erreur mise à jour Supabase : " + error.message);
+
+      await refreshData();
+      document.getElementById("adminNewBalance").value = "";
+      document.getElementById("adminNewPoints").value = "";
+      renderAdminData();
+      alert("Solde et points mis à jour pour " + u.name + ".");
+    }
+
+    // Graphiques Chart.js
+    Chart.defaults.color = "#94a3b8";
+    Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+
+    const periodData = {
+      "7J": { labels: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"], values: [4620, 4685, 4650, 4740, 4810, 4855, 4892] },
+      "1M": { labels: ["Sem 1", "Sem 2", "Sem 3", "Sem 4"], values: [4210, 4430, 4690, 4892] },
+      "1A": { labels: ["Jan", "Mar", "Mai", "Juil", "Sep", "Nov"], values: [3100, 3450, 3820, 4150, 4520, 4892] }
+    };
+
+    function initHomeCharts() {
+      const ctx1 = document.getElementById("chartMarket").getContext("2d");
+      cMarket = new Chart(ctx1, {
+        type: "line",
+        data: {
+          labels: periodData["7J"].labels,
+          datasets: [{
+            label: "Indice Nova-100",
+            data: periodData["7J"].values,
+            borderColor: "#eab308",
+            backgroundColor: "rgba(234, 179, 8, 0.12)",
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: "#1e293b" } },
+            y: { grid: { color: "#1e293b" } }
+          }
+        }
+      });
+
+      const ctx2 = document.getElementById("chartAlloc").getContext("2d");
+      cAlloc = new Chart(ctx2, {
+        type: "doughnut",
+        data: {
+          labels: ["Fonds Stables", "Croissance Tech", "Réserve Or", "Liquidités"],
+          datasets: [{
+            data: [40, 30, 20, 10],
+            backgroundColor: ["#eab308", "#3b82f6", "#22c55e", "#64748b"],
+            borderColor: "#0f172a",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "65%",
+          plugins: {
+            legend: { position: "right", labels: { boxWidth: 12 } }
+          }
+        }
+      });
+    }
+
+    function changePeriod(tf, btn) {
+      document.querySelectorAll(".tf-group button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      cMarket.data.labels = periodData[tf].labels;
+      cMarket.data.datasets[0].data = periodData[tf].values;
+      cMarket.update();
+    }
+
+    function drawMemberChart() {
+      const ctx = document.getElementById("chartMember").getContext("2d");
+      if (cMember) cMember.destroy();
+      const bal = sessionUser ? Number(sessionUser.balance || 0) : 0;
+      const pts = sessionUser ? Number(sessionUser.points || 0) : 0;
+
+      cMember = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: ["Début", "Étape 1", "Étape 2", "Étape 3", "Actuel"],
+          datasets: [
+            {
+              label: "Solde ($)",
+              data: [0, Number((bal * 0.25).toFixed(2)), Number((bal * 0.5).toFixed(2)), Number((bal * 0.8).toFixed(2)), bal],
+              borderColor: "#22c55e",
+              backgroundColor: "rgba(34, 197, 94, 0.12)",
+              borderWidth: 2.5,
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: "Points",
+              data: [0, Math.round(pts * 0.25), Math.round(pts * 0.5), Math.round(pts * 0.8), pts],
+              borderColor: "#eab308",
+              borderWidth: 2,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { grid: { color: "#1e293b" } },
+            y: { beginAtZero: true, grid: { color: "#1e293b" } }
+          }
+        }
+      });
+    }
+
+    function drawAdminCharts() {
+      const revData = OFFERS.map(o =>
+        payments
+          .filter(p => (p.type || "Dépôt") === "Dépôt" && p.offer === o.name && p.status === "Validé")
+          .reduce((s, p) => s + p.amount, 0)
+      );
+
+      const ctxRev = document.getElementById("chartAdminRev").getContext("2d");
+      if (cAdmRev) cAdmRev.destroy();
+      cAdmRev = new Chart(ctxRev, {
+        type: "bar",
+        data: {
+          labels: OFFERS.map(o => o.name),
+          datasets: [{
+            label: "Dépôts ($)",
+            data: revData,
+            backgroundColor: "#eab308",
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, grid: { color: "#1e293b" } }
+          }
+        }
+      });
+
+      const okCount = payments.filter(p => p.status === "Validé").length;
+      const waitCount = payments.filter(p => p.status === "En attente").length;
+      const noCount = payments.filter(p => p.status === "Refusé").length;
+
+      const ctxStat = document.getElementById("chartAdminStatus").getContext("2d");
+      if (cAdmStat) cAdmStat.destroy();
+      cAdmStat = new Chart(ctxStat, {
+        type: "doughnut",
+        data: {
+          labels: ["Validés", "En attente", "Refusés"],
+          datasets: [{
+            data: [okCount, waitCount, noCount],
+            backgroundColor: ["#22c55e", "#eab308", "#ef4444"],
+            borderColor: "#0f172a",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "65%",
+          plugins: { legend: { position: "right", labels: { boxWidth: 12 } } }
+        }
+      });
+    }
+
+    // Démarrage
+    buildOffersUI();
+    initHomeCharts();
+    refreshData();
+    setInterval(updateCountdownUI, 1000);
+  </script>
+
+</body>
+</html>
